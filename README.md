@@ -19,7 +19,7 @@ Web scraper for **latest UK BESS (Battery Energy Storage System)** projects, bui
 - **Weekly runs**: Use `--weekly` to save dated files (e.g. `bess_uk_multi_source_2025-02-03.csv`) for week-over-week comparison.
 - **Investment scope**: Each run appends one row to `uk_investment_scope_summary.csv` with counts by status, by opportunity type, and total MW.
 
-## Push to GitHub
+## GitHub & Deploy
 
 The repo is already initialized with a first commit. To put it on GitHub:
 
