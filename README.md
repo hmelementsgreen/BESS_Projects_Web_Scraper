@@ -19,6 +19,24 @@ Web scraper for **latest UK BESS (Battery Energy Storage System)** projects, bui
 - **Weekly runs**: Use `--weekly` to save dated files (e.g. `bess_uk_multi_source_2025-02-03.csv`) for week-over-week comparison.
 - **Investment scope**: Each run appends one row to `uk_investment_scope_summary.csv` with counts by status, by opportunity type, and total MW.
 
+## Push to GitHub
+
+The repo is already initialized with a first commit. To put it on GitHub:
+
+1. **Create a new repo on GitHub**: [github.com/new](https://github.com/new) → name it e.g. `BESS_Projects_Web_Scraper` → **don’t** add a README or .gitignore (you already have them) → Create repository.
+2. **Add remote and push** (replace `YOUR_USERNAME` and `YOUR_REPO` with your GitHub user and repo name):
+
+```bash
+cd BESS_Projects_Web_Scraper
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git branch -M main
+git push -u origin main
+```
+
+Or with SSH: `git remote add origin git@github.com:YOUR_USERNAME/YOUR_REPO.git`
+
+---
+
 ## Setup
 
 ```bash
