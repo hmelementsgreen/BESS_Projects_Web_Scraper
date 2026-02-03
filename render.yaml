@@ -4,6 +4,7 @@ services:
   - type: web
     name: bess-pipeline
     runtime: python
+    plan: free  # Use free tier (no payment required). Omit = paid starter.
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn -w 1 -b 0.0.0.0:$PORT --timeout 300 app:app
     envVars:
