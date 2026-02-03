@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BESS Pipeline – Elements Green</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f5ee;
+      --card: #fff;
+      --border: rgba(45, 90, 39, 0.12);
+      --text: #1a2e1a;
+      --muted: #5c7358;
+      --accent: #2d5a27;
+      --accent-hover: #3d7a35;
+      --accent-light: #e8f0e6;
+      --success: #2d5a27;
+      --warn: #8b6914;
+      --warn-bg: #faf5e4;
+      --error: #a63d2e;
+      --error-bg: #fce8e6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+    }
+    .container { max-width: 480px; width: 100%; }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 0.5rem;
+      background: linear-gradient(135deg, var(--accent) 0%, #4a7c59 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      color: #fff;
+    }
+    .brand h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin: 0 0 0.2rem 0;
+      letter-spacing: -0.02em;
+    }
+    .brand .tagline {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .intro {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+      margin-bottom: 1.25rem;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 8px rgba(45, 90, 39, 0.06);
+      border: 1px solid var(--border);
+    }
+    .card h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0 0 0.75rem 0;
+      color: var(--text);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      width: 100%;
+      padding: 0.85rem 1rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn:disabled { opacity: 0.8; cursor: not-allowed; }
+    .status {
+      font-size: 0.9rem;
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      line-height: 1.4;
+    }
+    .status.idle { background: var(--accent-light); color: var(--muted); }
+    .status.running { background: var(--warn-bg); color: var(--warn); }
+    .status.done { background: var(--accent-light); color: var(--success); }
+    .status.error { background: var(--error-bg); color: var(--error); }
+
+    .scrape-summary-text {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.45;
+      margin: 0 0 0.75rem 0;
+      padding: 0.6rem 0.85rem;
+      background: var(--accent-light);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .summary-item {
+      background: var(--bg);
+      padding: 0.6rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+    }
+    .summary-item strong {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+    .summary-item span { color: var(--muted); font-weight: 500; }
+
+    .downloads { margin-top: 1rem; }
+    .downloads h3 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .download-btns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+    @media (max-width: 360px) {
+      .download-btns { grid-template-columns: 1fr; }
+    }
+    .download-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0.65rem 0.5rem;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      text-align: center;
+      line-height: 1.25;
+      transition: background 0.2s, color 0.2s;
+    }
+    .download-btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+    .download-btn .download-btn-label { display: block; font-weight: 600; }
+    .download-btn .download-btn-sublabel { font-size: 0.7rem; font-weight: 500; opacity: 0.85; margin-top: 0.15rem; }
+    .download-btn:hover .download-btn-sublabel { opacity: 1; }
+    .download-btn--disabled {
+      color: var(--muted);
+      cursor: default;
+      opacity: 0.7;
+    }
+    .download-btn--disabled:hover { background: var(--accent-light); color: var(--muted); }
+    .download-empty {
+      grid-column: 1 / -1;
+      font-size: 0.85rem;
+      color: var(--muted);
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .hidden { display: none !important; }
+
+    .footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="brand">
+      <div class="brand-icon" aria-hidden="true">♻</div>
+      <h1>BESS Pipeline</h1>
+      <p class="tagline">Elements Green</p>
+    </header>
+    <p class="intro">UK & Ireland battery and solar projects from 12 sources. One click to refresh; duplicates are merged.</p>
+
+    <div class="card">
+      <h2>Refresh data</h2>
+      <button type="button" class="btn" id="btnScrape">
+        <span aria-hidden="true">▶</span> Start scrape
+      </button>
+      <div class="status idle" id="status">Click to fetch latest data (about 1–2 min).</div>
+    </div>
+
+    <div class="card hidden" id="resultsCard">
+      <h2>Summary</h2>
+      <p class="scrape-summary-text hidden" id="scrapeSummaryText" aria-live="polite"></p>
+      <div class="summary-grid" id="summaryGrid"></div>
+      <div class="downloads">
+        <h3>Download</h3>
+        <div class="download-btns" id="downloadBtns">
+          <span class="download-empty">No files yet. Run a scrape first.</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="footer">UK & Ireland · Merged & deduplicated</p>
+  </div>
+
+  <script>
+    const btn = document.getElementById('btnScrape');
+    const statusEl = document.getElementById('status');
+    const resultsCard = document.getElementById('resultsCard');
+    const scrapeSummaryText = document.getElementById('scrapeSummaryText');
+    const summaryGrid = document.getElementById('summaryGrid');
+    const downloadBtns = document.getElementById('downloadBtns');
+
+    const KPI_KEYS = [
+      ['total_projects', 'Projects'],
+      ['total_mw', 'Total MW'],
+      ['count_planned', 'Planned'],
+      ['count_consented', 'Consented'],
+      ['count_in_construction', 'In construction'],
+      ['count_operational', 'Operational'],
+      ['count_early_stage_development', 'Early-stage'],
+      ['count_construction_finance', 'Construction / finance'],
+      ['count_ma_offtake', 'M&A / offtake'],
+    ];
+
+    function setStatus(msg, state) {
+      statusEl.textContent = msg;
+      statusEl.className = 'status ' + (state || 'idle');
+    }
+
+    function renderKpis(summary) {
+      if (!summary) return;
+      summaryGrid.innerHTML = KPI_KEYS.map(function (item) {
+        var key = item[0], label = item[1];
+        var val = summary[key];
+        if (key === 'total_mw' && typeof val === 'number') val = val.toLocaleString();
+        return '<div class="summary-item"><strong>' + (val ?? '–') + '</strong><span>' + label + '</span></div>';
+      }).join('');
+    }
+
+    function pollStatus() {
+      fetch('/api/status')
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'running') {
+            setStatus('Gathering data… (1–2 min)', 'running');
+            setTimeout(pollStatus, 2000);
+            return;
+          }
+          btn.disabled = false;
+          if (data.status === 'done') {
+            loadResults(data.summary);
+            resultsCard.classList.remove('hidden');
+          } else if (data.status === 'error') {
+            setStatus('Error: ' + (data.error || 'Unknown'), 'error');
+          } else {
+            setStatus('Click to fetch latest data (about 1–2 min).', 'idle');
+          }
+        })
+        .catch(function () {
+          btn.disabled = false;
+          setStatus('Could not reach server.', 'error');
+        });
+    }
+
+    function loadResults(summary) {
+      if (summary) renderKpis(summary);
+      fetch('/api/results', { cache: 'no-store' }).then(r => r.json()).then(applyResults);
+    }
+
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      setStatus('Starting…', 'running');
+      fetch('/api/scrape', { method: 'POST' })
+        .then(r => r.json())
+        .then(function (data) {
+          if (data.status === 'running') pollStatus();
+          else {
+            btn.disabled = false;
+            setStatus('Started.', 'running');
+            pollStatus();
+          }
+        })
+        .catch(function () {
+          btn.disabled = false;
+          setStatus('Failed to start.', 'error');
+        });
+    });
+
+    function applyResults(data) {
+      if (!data) return;
+      if (data.scrape_summary) {
+        scrapeSummaryText.textContent = data.scrape_summary;
+        scrapeSummaryText.classList.remove('hidden');
+      } else {
+        scrapeSummaryText.classList.add('hidden');
+      }
+      if (data.summary) {
+        renderKpis(data.summary);
+        var n = data.summary.total_projects;
+        if (n != null && n >= 50) {
+          setStatus('Done. ' + n + ' unique project' + (n === 1 ? '' : 's') + '.', 'done');
+        }
+      }
+      var files = (data.files || []).slice(0, 12);
+      var sorted = files.slice().sort(function (a, b) {
+        var am = a.name.indexOf('multi_source') >= 0 ? 0 : 1;
+        var bm = b.name.indexOf('multi_source') >= 0 ? 0 : 1;
+        if (am !== bm) return am - bm;
+        return (b.updated || '').localeCompare(a.updated || '');
+      });
+      if (sorted.length) {
+        var multiCsv = files.filter(function (f) { return f.name.indexOf('multi_source') >= 0 && f.name.endsWith('.csv'); }).sort(function (a, b) { return (b.updated || '').localeCompare(a.updated || ''); })[0];
+        var multiJson = files.filter(function (f) { return f.name.indexOf('multi_source') >= 0 && f.name.endsWith('.json'); }).sort(function (a, b) { return (b.updated || '').localeCompare(a.updated || ''); })[0];
+        var summaryCsv = files.filter(function (f) { return f.name.indexOf('investment_scope_summary') >= 0 && f.name.endsWith('.csv'); })[0];
+        downloadBtns.innerHTML = [
+          { file: multiCsv, label: 'Full dataset', sublabel: 'CSV' },
+          { file: multiJson, label: 'Full dataset', sublabel: 'JSON' },
+          { file: summaryCsv, label: 'Summary', sublabel: 'CSV' },
+        ].map(function (item) {
+          if (!item.file) return '<div class="download-btn download-btn--disabled"><span class="download-btn-label">' + item.label + '</span><span class="download-btn-sublabel">' + item.sublabel + '</span></div>';
+          return '<a href="/api/download/' + encodeURIComponent(item.file.name) + '" download class="download-btn"><span class="download-btn-label">' + item.label + '</span><span class="download-btn-sublabel">' + item.sublabel + '</span></a>';
+        }).join('');
+      } else {
+        downloadBtns.innerHTML = '<span class="download-empty">No files yet. Run a scrape first.</span>';
+      }
+    }
+
+    fetch('/api/results', { cache: 'no-store' }).then(r => r.json()).then(function (data) {
+      applyResults(data);
+      if ((data.files && data.files.length) || (data.summary && data.summary.total_projects >= 50)) {
+        resultsCard.classList.remove('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
