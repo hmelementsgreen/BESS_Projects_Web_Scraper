@@ -90,7 +90,7 @@ python bot.py --schedule --run-now            # Run once now, then on schedule
 
 ### Deploy (Render / Railway / Heroku)
 
-**Render (recommended)**
+**Render (recommended)** – Full step-by-step: **[docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md)**.
 
 1. Push the repo to **GitHub**.
 2. Go to [render.com](https://render.com) → New → Web Service → connect your repo.
