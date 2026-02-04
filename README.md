@@ -58,6 +58,36 @@ python app.py
 
 Open **http://localhost:5000**. Click **Start scraping**; wait 1–2 minutes (12 sources, including REPD, TEC, PINS, ECR, news). When it’s done you’ll see a summary and links to download the merged CSV and investment-scope summary.
 
+---
+
+## Automation Bot (process automation)
+
+For hands-off runs (e.g. on a server or scheduled task), use the **bot** instead of the web app. It runs the same scraper on a schedule or once, and keeps a status file so you can see what the last run did.
+
+```bash
+pip install -r requirements.txt   # includes schedule
+
+# Run once and exit
+python bot.py
+python bot.py --once
+
+# Show last run summary (no scrape)
+python bot.py --status
+
+# Run on schedule (keeps running until Ctrl+C; graceful shutdown)
+python bot.py --schedule                      # Daily at 06:00 UTC
+python bot.py --schedule --time "09:00"       # Daily at 09:00 UTC
+python bot.py --schedule --interval 3600      # Every hour
+python bot.py --schedule --run-now            # Run once now, then on schedule
+```
+
+- **Logs:** `output/uk/bot_log.txt` – each run and breakdown (by status, by opportunity).
+- **Status:** `output/uk/bot_status.json` – last run summary (projects, MW, by status/opportunity). Use `python bot.py --status` to print it.
+- **Output:** Same as web app – `output/uk/bess_uk_multi_source_*.csv`, summary CSV, etc.
+- **Baseline:** The pre-bot code is tagged as `v1.0-baseline`; the bot is the automation layer on top.
+
+---
+
 ### Deploy (Render / Railway / Heroku)
 
 **Render (recommended)**

@@ -35,7 +35,17 @@
       align-items: center;
       padding: 1.5rem 1rem;
     }
-    .container { max-width: 480px; width: 100%; }
+    .container { max-width: 960px; width: 100%; }
+    .cards-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    @media (max-width: 700px) {
+      .cards-row { grid-template-columns: 1fr; }
+    }
 
     .brand {
       text-align: center;
@@ -52,6 +62,12 @@
       justify-content: center;
       font-size: 1.25rem;
       color: #fff;
+    }
+    .brand-logo {
+      max-height: 150px;
+      width: auto;
+      display: block;
+      margin: 0 auto 0.5rem;
     }
     .brand h1 {
       font-size: 1.35rem;
@@ -148,6 +164,37 @@
     }
     .summary-item span { color: var(--muted); font-weight: 500; }
 
+    .bot-no-run p { margin: 0 0 0.5rem 0; font-size: 0.9rem; line-height: 1.45; color: var(--muted); }
+    .bot-no-run code, .bot-hint code { font-family: ui-monospace, monospace; font-size: 0.85em; background: var(--bg); padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid var(--border); }
+    .bot-hint { margin: 0; font-size: 0.8rem; color: var(--muted); }
+    .bot-meta { font-size: 0.9rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .bot-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    .bot-badge.ok { background: var(--accent-light); color: var(--success); }
+    .bot-badge.failed { background: var(--error-bg); color: var(--error); }
+    .bot-log-section { margin-top: 1rem; }
+    .bot-log-section h3 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .bot-log {
+      font-family: ui-monospace, monospace;
+      font-size: 0.75rem;
+      line-height: 1.4;
+      margin: 0;
+      padding: 0.6rem 0.85rem;
+      max-height: 200px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
     .downloads { margin-top: 1rem; }
     .downloads h3 {
       font-size: 0.75rem;
@@ -216,11 +263,10 @@
 <body>
   <div class="container">
     <header class="brand">
-      <div class="brand-icon" aria-hidden="true">♻</div>
+      <img src="/img/logo.png" alt="Elements Green" class="brand-logo" />
       <h1>BESS Pipeline</h1>
-      <p class="tagline">Elements Green</p>
     </header>
-    <p class="intro">UK & Ireland battery and solar projects from 12 sources. One click to refresh; duplicates are merged.</p>
+    <p class="intro">Your consolidated view of UK & Ireland BESS and solar development. Twelve public sources, merged and deduplicated for investment scoping.</p>
 
     <div class="card">
       <h2>Refresh data</h2>
@@ -230,14 +276,32 @@
       <div class="status idle" id="status">Click to fetch latest data (about 1–2 min).</div>
     </div>
 
-    <div class="card hidden" id="resultsCard">
-      <h2>Summary</h2>
-      <p class="scrape-summary-text hidden" id="scrapeSummaryText" aria-live="polite"></p>
-      <div class="summary-grid" id="summaryGrid"></div>
-      <div class="downloads">
-        <h3>Download</h3>
-        <div class="download-btns" id="downloadBtns">
-          <span class="download-empty">No files yet. Run a scrape first.</span>
+    <div class="cards-row">
+      <div class="card" id="botCard">
+        <h2>Bot last run</h2>
+        <div id="botNoRun" class="bot-no-run hidden">
+          <p>No bot run yet. Run <code>python bot.py --once</code> (or the scheduled bot) to populate this.</p>
+          <p class="bot-hint">To run on a schedule: <code>python bot.py --schedule</code></p>
+        </div>
+        <div id="botContent" class="hidden">
+          <div class="bot-meta" id="botMeta"></div>
+          <div class="summary-grid" id="botSummaryGrid"></div>
+          <div class="bot-log-section">
+            <h3>Recent log</h3>
+            <pre class="bot-log" id="botLog" aria-label="Bot log"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="resultsCard">
+        <h2>Summary</h2>
+        <p class="scrape-summary-text hidden" id="scrapeSummaryText" aria-live="polite"></p>
+        <div class="summary-grid" id="summaryGrid"></div>
+        <div class="downloads">
+          <h3>Download</h3>
+          <div class="download-btns" id="downloadBtns">
+            <span class="download-empty">No files yet. Run a scrape first.</span>
+          </div>
         </div>
       </div>
     </div>
@@ -293,8 +357,10 @@
           if (data.status === 'done') {
             loadResults(data.summary);
             resultsCard.classList.remove('hidden');
+            setTimeout(loadBotStatus, 200);
           } else if (data.status === 'error') {
             setStatus('Error: ' + (data.error || 'Unknown'), 'error');
+            setTimeout(loadBotStatus, 200);
           } else {
             setStatus('Click to fetch latest data (about 1–2 min).', 'idle');
           }
@@ -374,6 +440,79 @@
         resultsCard.classList.remove('hidden');
       }
     });
+
+    function botStatusToSummary(s) {
+      if (!s) return null;
+      var byStatus = s.by_status || {};
+      var byOpp = s.by_opportunity || {};
+      return {
+        total_projects: s.total_projects,
+        total_mw: s.total_mw,
+        count_planned: byStatus.planned,
+        count_consented: byStatus.consented,
+        count_in_construction: byStatus.in_construction,
+        count_operational: byStatus.operational,
+        count_early_stage_development: byOpp.early_stage,
+        count_construction_finance: byOpp.construction_finance,
+        count_ma_offtake: byOpp.ma_offtake,
+      };
+    }
+
+    function renderBotKpis(summary) {
+      var grid = document.getElementById('botSummaryGrid');
+      if (!summary) { grid.innerHTML = ''; return; }
+      grid.innerHTML = KPI_KEYS.map(function (item) {
+        var key = item[0], label = item[1];
+        var val = summary[key];
+        if (key === 'total_mw' && typeof val === 'number') val = val.toLocaleString();
+        return '<div class="summary-item"><strong>' + (val ?? '–') + '</strong><span>' + label + '</span></div>';
+      }).join('');
+    }
+
+    function renderBotCard(status, logLines) {
+      var noRun = document.getElementById('botNoRun');
+      var content = document.getElementById('botContent');
+      var meta = document.getElementById('botMeta');
+      var logEl = document.getElementById('botLog');
+      if (!status || status.last_run_at == null) {
+        noRun.classList.remove('hidden');
+        content.classList.add('hidden');
+        logEl.textContent = '';
+        return;
+      }
+      noRun.classList.add('hidden');
+      content.classList.remove('hidden');
+      var at = status.last_run_at;
+      try {
+        var d = new Date(at);
+        if (!isNaN(d.getTime())) at = d.toLocaleString();
+      } catch (e) {}
+      var badge = status.last_run_ok
+        ? '<span class="bot-badge ok">OK</span>'
+        : '<span class="bot-badge failed">Failed</span>';
+      meta.innerHTML = 'Last run: ' + at + ' ' + badge;
+      if (status.error) {
+        meta.appendChild(document.createTextNode(' — ' + status.error));
+      }
+      renderBotKpis(botStatusToSummary(status));
+      logEl.textContent = (logLines && logLines.length) ? logLines.join('\n') : '(no log lines)';
+    }
+
+    function loadBotStatus() {
+      Promise.all([
+        fetch('/api/bot/status', { cache: 'no-store' }).then(function (r) { return r.json(); }),
+        fetch('/api/bot/log?tail=50', { cache: 'no-store' }).then(function (r) { return r.json(); }),
+      ]).then(function (results) {
+        var status = results[0];
+        var logData = results[1];
+        var lines = (logData && logData.lines) ? logData.lines : [];
+        renderBotCard(status, lines);
+      }).catch(function () {
+        renderBotCard(null, []);
+      });
+    }
+
+    loadBotStatus();
   </script>
 </body>
 </html>

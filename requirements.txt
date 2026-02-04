@@ -4,3 +4,4 @@ pandas>=2.0.0
 lxml>=4.9.0
 flask>=3.0.0
 gunicorn>=21.0.0
+schedule>=1.2.0

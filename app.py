@@ -3,6 +3,7 @@ Simple web app for UK BESS scraper.
 Press a button to start scraping; get status and download results.
 """
 
+import json
 import logging
 import os
 import sys
@@ -102,6 +103,9 @@ def _run_scraper():
             f"{len(rows)} unique projects (deduplicated) · {total_mw:,.0f} MW total · "
             f"Completed at {finished_str}. Download bess_uk_multi_source for the full dataset."
         )
+        # Write bot_status and bot_log BEFORE updating state so when client sees "done", files exist
+        _write_bot_status(summary, output_dir=cfg.OUTPUT_DIR)
+        _scrape_log(f"[Scrape] Done. {len(rows)} projects, {total_mw:,.0f} MW. Files saved to {cfg.OUTPUT_DIR}")
         with _lock:
             _scrape_state["status"] = "done"
             _scrape_state["finished_at"] = finished_at.isoformat()
@@ -109,9 +113,9 @@ def _run_scraper():
             _scrape_state["summary"] = summary
             _scrape_state["scrape_summary"] = scrape_summary
             _scrape_state["error"] = None
-        _scrape_log(f"[Scrape] Done. {len(rows)} projects, {total_mw:,.0f} MW. Files saved to {cfg.OUTPUT_DIR}")
     except Exception as e:
         _scrape_log(f"[Scrape] Error: {e}")
+        _write_bot_status({}, error=str(e))
         with _lock:
             _scrape_state["status"] = "error"
             _scrape_state["finished_at"] = datetime.now(timezone.utc).isoformat()
@@ -160,6 +164,46 @@ def _out_uk_dir():
     """Absolute path to output/uk, always relative to app.py (same place scraper writes)."""
     base = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
     return os.path.join(base, "output", cfg.OUTPUT_UK_SUBDIR)
+
+
+def _write_bot_status(summary: dict, error: str | None = None, output_dir: str | None = None):
+    """Write last run summary to bot_status.json (same format as bot.py) so Bot card stays in sync."""
+    out_uk = output_dir if output_dir else _out_uk_dir()
+    path = os.path.join(out_uk, "bot_status.json")
+    Path(out_uk).mkdir(parents=True, exist_ok=True)
+    now = datetime.now(timezone.utc).isoformat()
+    payload = {
+        "last_run_at": now,
+        "last_run_ok": error is None,
+        "error": error,
+        "total_projects": summary.get("total_projects", 0),
+        "total_mw": summary.get("total_mw", 0),
+        "by_status": {
+            "planned": summary.get("count_planned", 0),
+            "consented": summary.get("count_consented", 0),
+            "in_construction": summary.get("count_in_construction", 0),
+            "operational": summary.get("count_operational", 0),
+        },
+        "by_opportunity": {
+            "early_stage": summary.get("count_early_stage_development", 0),
+            "construction_finance": summary.get("count_construction_finance", 0),
+            "ma_offtake": summary.get("count_ma_offtake", 0),
+        },
+    }
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+    except Exception:
+        pass
+    # Append to bot_log.txt so "Recent log" in UI shows web app runs too
+    log_path = os.path.join(out_uk, "bot_log.txt")
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{ts}] [Web app] Scrape done. {payload['total_projects']} projects, {payload['total_mw']:,.0f} MW." if error is None else f"[{ts}] [Web app] Scrape failed: {error}"
+    try:
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:
+        pass
 
 
 def _load_summary_from_multi_source_csv(out_uk: str, multi_source_path: str = None):
@@ -338,6 +382,39 @@ def api_download(filename):
     if not os.path.isfile(path):
         return jsonify({"error": "File not found"}), 404
     return send_file(path, as_attachment=True, download_name=filename)
+
+
+@app.route("/api/bot/status", methods=["GET"])
+def api_bot_status():
+    """Return last bot run summary from bot_status.json. 200 with last_run_at null if missing."""
+    out_uk = _out_uk_dir()
+    path = os.path.join(out_uk, "bot_status.json")
+    if not os.path.isfile(path):
+        return jsonify({"last_run_at": None})
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception:
+        return jsonify({"last_run_at": None})
+
+
+@app.route("/api/bot/log", methods=["GET"])
+def api_bot_log():
+    """Return last N lines of bot_log.txt. Query param tail (default 50, max 500)."""
+    tail = request.args.get("tail", 50, type=int)
+    tail = max(0, min(500, tail))
+    out_uk = _out_uk_dir()
+    path = os.path.join(out_uk, "bot_log.txt")
+    if not os.path.isfile(path):
+        return jsonify({"lines": []})
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        lines = [line.rstrip("\n\r") for line in lines[-tail:]]
+        return jsonify({"lines": lines})
+    except Exception:
+        return jsonify({"lines": []})
 
 
 @app.route("/api/debug", methods=["GET"])
